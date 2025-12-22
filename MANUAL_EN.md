@@ -44,7 +44,8 @@ The SoC integrates the Core with a 64KB SRAM memory and a Bus Arbiter.
 ## 3. Software Stack
 
 ### 3.1 Kernel Driver (`kernel_driver/hansen_pci.c`)
-A real Linux kernel module (`.ko`).
+- **Stable API**: [C API Reference v1.0](API_REFERENCE.md)
+- A real Linux kernel module (`.ko`).
 - Maps device memory (BAR0) to kernel space.
 - Creates `/dev/hansen0` for user-space interaction.
 - Supports direct read/write to hardware registers.
