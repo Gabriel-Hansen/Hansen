@@ -113,4 +113,4 @@ Para fabricação real em silício (130nm).
     ```
 
 ---
-*Gerado automaticamente pelo Agente Antigravidade em 2025.*
+
