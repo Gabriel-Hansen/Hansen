@@ -38,8 +38,8 @@ Vergleich: **100 Teilchenphysik-Updates**
 | Prozessor | Taktfrequenz | Ausführungszeit | vs Hansen |
 |---|---|---|---|
 | **AMD Ryzen 5 3400G** (Host) | ~3.7 GHz | 13.72 µs | **2.5x Langsamer** |
-| **Apple M3 Max** (Est) | ~4.0 GHz | 6.23 µs | **1.1x Langsamer** |
-| **Intel i9-14900K** (Est) | ~6.0 GHz | 5.49 µs | **Gleichstand** |
+| **Apple M3 Max** (Geschätzt) | ~4.0 GHz | 6.23 µs | **1.1x Langsamer** |
+| **Intel i9-14900K** (Geschätzt) | ~6.0 GHz | 5.49 µs | **Gleichstand** |
 | **Hansen Accelerator** | **0.05 GHz** | **5.52 µs** | **Referenz** |
 
 > **Fazit**: Hansen erreicht die Leistung der schnellsten Desktop-CPUs bei nur **50MHz** und **1/1000 des Energieverbrauchs**.
