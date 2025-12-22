@@ -5,6 +5,7 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/mutex.h> // Industrial: Thread Safety
 #include <linux/pci.h>
 #include <linux/uaccess.h>
 
@@ -16,7 +17,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Gabriel Hansen");
 MODULE_DESCRIPTION("PCIe Driver for Hansen Accelerator");
-MODULE_VERSION("1.0");
+MODULE_VERSION("1.1"); // Industrial Update
 
 // Device State
 struct hansen_dev {
@@ -25,6 +26,7 @@ struct hansen_dev {
   dev_t dev_major;
   struct cdev cdev;
   struct class *class;
+  struct mutex lock; // Protects concurrent access
 };
 
 static struct hansen_dev *my_hansen_dev;
@@ -62,9 +64,16 @@ static ssize_t hansen_write(struct file *file, const char __user *buf,
   // Write Data to BAR0
   // Note: This is slow byte-banging. Real driver would use DMA
   // (dma_alloc_coherent).
+  if (mutex_lock_interruptible(&my_hansen_dev->lock)) {
+    kfree(kbuf);
+    return -ERESTARTSYS;
+  }
+
   for (i = 4; i < count; i++) {
     writeb(kbuf[i], my_hansen_dev->bar0_base + off + (i - 4));
   }
+
+  mutex_unlock(&my_hansen_dev->lock);
 
   kfree(kbuf);
   return count;
@@ -84,7 +93,10 @@ static ssize_t hansen_read(struct file *file, char __user *buf, size_t count,
 
   // Decide what to read based on offset
   // For now, everything maps to BAR0 IO memory
+  if (mutex_lock_interruptible(&my_hansen_dev->lock))
+    return -ERESTARTSYS;
   val = readl(my_hansen_dev->bar0_base + offset);
+  mutex_unlock(&my_hansen_dev->lock);
 
   if (copy_to_user(buf, &val, 4))
     return -EFAULT;
@@ -126,6 +138,7 @@ static int hansen_probe(struct pci_dev *pdev, const struct pci_device_id *id) {
     goto err_regions;
   }
   my_hansen_dev->pdev = pdev;
+  mutex_init(&my_hansen_dev->lock);
 
   // 4. Map BAR0
   my_hansen_dev->bar0_base = pci_iomap(pdev, 0, 0);
