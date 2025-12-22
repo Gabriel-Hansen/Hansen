@@ -9,7 +9,7 @@ This document formally defines the Register Map, Commands, and State Machine beh
 | Base Address | Range Size | Description | Access |
 |---|---|---|---|
 | `0x0000_0000` | 64 KB | **Local SRAM** (Instruction/Data) | RW |
-| `0x4000_0000` | 16 Bytes | **DMA Controller Registers** | W |
+| `0x4000_0000` | 20 Bytes | **DMA Controller Registers** | RW |
 
 ---
 
@@ -23,10 +23,15 @@ This document formally defines the Register Map, Commands, and State Machine beh
 | `+0x04` | `DMA_DST_ADDR` | WO | Destination Address (Local SRAM Offset). |
 | `+0x08` | `DMA_LENGTH` | WO | Length of transfer in Words (4 bytes). |
 | `+0x0C` | `DMA_CONTROL` | WO | Control Command Register. |
+| `+0x10` | `DMA_STATUS` | RO | Status Flags (Polling). |
 
 #### DMA_CONTROL Bitfields
 - **Bit 0**: `START` - Write '1' to begin transfer. Clears automatically.
-- **Bit 1**: `INT_EN` - Enable Interrupt on completion (Not yet implemented in HW, assumed ON).
+- **Bit 1**: `INT_EN` - Enable Interrupt on completion.
+
+#### DMA_STATUS Bitfields
+- **Bit 0**: `BUSY` - 1 if DMA or Core is active, 0 if Idle.
+- **Bit 1**: `ERROR` - 1 if last command failed (e.g. Bus Error).
 
 ---
 
