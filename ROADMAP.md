@@ -2,6 +2,17 @@
 
 **From FPGA Prototype to Mass Market Silicon.**
 
+## GAP ANALYSIS: Prototype vs Production
+To be considered "Commercial Ready", we need to bridge these gaps:
+
+| Feature | Current Prototype | Production Requirement |
+|---|---|---|
+| **Pipeline** | Single Cycle (Slow) | 5-Stage Pipeline (Fast) |
+| **Data Transfer** | PIO (CPU copy byte-by-byte) | **DMA** (Direct Memory Access) |
+| **Toolchain** | Hand-written Assembly | **C/C++ Compiler** (LLVM Backend) |
+| **OS Driver** | Polling / Manual IO | **Interrupts** (MSI-X) / Async |
+| **Memory** | 64KB Scratchpad | **L1/L2 Cache** + DRAM Controller |
+
 ## Year 1: Prototyping & Seed (2026)
 
 ### Q1-Q2: FPGA Validation
