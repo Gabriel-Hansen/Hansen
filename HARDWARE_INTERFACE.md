@@ -38,8 +38,29 @@ This document formally defines the Register Map, Commands, and State Machine beh
 3.  **COMPLETE**: Triggers `irq_done`. Returns to IDLE.
 
 ### Interrupts
-- **IRQ 0**: DMA Transfer Complete.
-- **IRQ 1**: Kernel Core Halt (Optional future expansion).
+- **IRQ 0 (Bit 0)**: `DMA_COMPLETE`. Triggered when `dma_busy` transitions from 1 to 0.
+- **IRQ 1 (Bit 1)**: `CORE_HALT`. Triggered when Core executes `HALT` instruction.
+
+## 5. Bus Arbitration & Priorities
+The System-on-Chip (SoC) uses a fixed-priority arbiter for the shared SRAM.
+
+| Priority | Master | Description |
+|---|---|---|
+| **1 (High)** | **DMA Controller** | Guaranteed bandwidth. Blocks CPU/PCIe during bulk transfers. |
+| **2 (Med)** | **PCIe Target** | External Host access. Simulates "Cycle Stealing". |
+| **3 (Low)** | **Hansen Core** | The CPU stalls if DMA or PCIe accesses memory. |
+
+## 6. Command Queue & Lifecycle
+Currently, the hardware implements a **Depth-1 Command Queue** (Synchronous).
+
+1.  **HOST**: Writes `SRC`, `DST`, `LEN`.
+2.  **HOST**: Writes `CTRL=START`.
+3.  **HW**: Sets `STATUS=BUSY`.
+4.  **HW**: Performs Copy.
+5.  **HW**: Clears `STATUS=BUSY`, Asserts `IRQ`.
+6.  **HOST**: Sees `IRQ` or polls `STATUS`.
+
+*Future revisions (v2.0) will introduce a Ring Buffer (Circular Queue) at `0x5000_0000`.*
 
 ---
 

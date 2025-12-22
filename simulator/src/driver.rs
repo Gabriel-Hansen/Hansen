@@ -1,4 +1,3 @@
-
 // Driver Mock
 // Acts as the interface between User Space (Application) and "Hardware" (Simulator Core)
 // In a real scenario, this would be a kernel module or a user-space library wrapping ioctls.
@@ -66,5 +65,35 @@ impl AcceleratorDriver {
     
     pub fn get_perf_stats(&self) -> u64 {
         self.core.cycle_count
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::isa::Opcode;
+
+    #[test]
+    fn test_driver_lifecycle() {
+        let mut driver = AcceleratorDriver::new();
+        
+        // 1. Initial State
+        assert_eq!(driver.core.halted, false);
+        assert_eq!(driver.core.cycle_count, 0);
+
+        // 2. Submit Kernel (ADDI x1, x0, 10; HALT)
+        // This implicitly tests transition to RUNNING and back to HALTED locally
+        let kernel = vec![
+            Instruction { opcode: Opcode::ADDI, rd: 1, rs1: 0, rs2: 0, imm: 10 },
+            Instruction { opcode: Opcode::HALT, rd: 0, rs1: 0, rs2: 0, imm: 0 },
+        ];
+        
+        let res = driver.submit_kernel(kernel);
+        assert!(res.is_ok());
+
+        // 3. Post-Execution State
+        assert_eq!(driver.core.halted, true);
+        assert_eq!(driver.core.regs[1], 10);
+        assert!(driver.get_perf_stats() > 0);
     }
 }
