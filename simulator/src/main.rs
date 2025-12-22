@@ -31,6 +31,26 @@ fn main() {
     }
 
     match command.as_str() {
+        "benchmark" => {
+             // Benchmark Mode: 100 particles, 1 frame, Report Cycles only
+             let kernel = kernels::get_particle_sim_kernel();
+             let particle_count = 100;
+             let mut initial_data = Vec::with_capacity(particle_count as usize * 4);
+             for i in 0..particle_count {
+                 let val: u32 = i * 2;
+                 initial_data.extend_from_slice(&val.to_le_bytes());
+             }
+             driver.copy_to_device(&initial_data, 0).expect("DMA failed");
+             
+             let start = std::time::Instant::now();
+             match driver.submit_kernel(kernel) {
+                 Ok(stats) => {
+                     println!("CYCLES: {}", stats.core_cycles);
+                     println!("HOST_TIME_US: {}", start.elapsed().as_micros());
+                 },
+                 Err(e) => eprintln!("Benchmark failed: {}", e),
+             }
+        },
         "particles" => {
              // In a real game loop, we'd run this 60 times a second.
              // Here we simulate 10 frames of updates.

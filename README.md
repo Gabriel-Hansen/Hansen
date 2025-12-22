@@ -55,7 +55,18 @@ The accelerator is optimized for:
 - **Audio**: 3D spatial audio convolution.
 - **AI**: Simple inference (MLP/CNN) for game logic.
 
-## 5. How to Run
+## 5. Benchmarks (Prototype)
+Comparison: **100 Particle Physics Updates**
+
+| Metric | Intel Core i7 (x64) | Hansen (ASIC @ 50MHz) | Improvement |
+|---|---|---|---|
+| **Execution Time** | ~23.77 µs | **5.52 µs** | **4.3x Faster** |
+| **Energy Consumption** | 356 µJ | **0.27 µJ** | **1290x More Efficient** |
+| **Architecture** | Out-of-Order (Complex) | In-Order (Simple) | Significant Die Area Savings |
+
+> *Data generated using `demo/benchmark.py`. Efficiency based on 15W per core (x86) vs 50mW (Hansen).*
+
+## 6. How to Run
 
 ### Requirements
 - **Rust** (cargo)

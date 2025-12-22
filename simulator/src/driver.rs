@@ -12,6 +12,10 @@ pub struct AcceleratorDriver {
     pub core: Core,
 }
 
+pub struct PerfStats {
+    pub core_cycles: u64,
+}
+
 impl AcceleratorDriver {
     pub fn new() -> Self {
         AcceleratorDriver {
@@ -34,7 +38,7 @@ impl AcceleratorDriver {
     }
 
     // Submit a kernel (command buffer) for execution
-    pub fn submit_kernel(&mut self, kernel: Vec<Instruction>) -> Result<(), String> {
+    pub fn submit_kernel(&mut self, kernel: Vec<Instruction>) -> Result<PerfStats, String> {
         // Reset core state for new execution (except maybe general memory)
         self.core.pc = 0;
         self.core.halted = false;
@@ -53,7 +57,7 @@ impl AcceleratorDriver {
             return Err("Watchdog timer expired: Kernel took too long".to_string());
         }
 
-        Ok(())
+        Ok(PerfStats { core_cycles: self.core.cycle_count })
     }
 
     pub fn read_register(&self, reg_idx: usize) -> i32 {
