@@ -2,7 +2,7 @@
 
 **Acelerador Computacional de Alta Performance para Offloading de Física & Simulação.**
 
-[🇺🇸 English](README.md) | [🇧🇷 Português](README_PT.md)
+[🇺🇸 English](README.md) | [🇧🇷 Português](README_PT.md) | [🇨🇳 简体中文](README_ZH_CN.md) | [🇹🇼 繁體中文](README_ZH_TW.md) | [🇯🇵 日本語](README_JA.md) | [🇩🇪 Deutsch](README_DE.md)
 
 ---
 
