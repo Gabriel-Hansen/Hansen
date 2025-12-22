@@ -23,7 +23,12 @@ module hansen_soc (
     wire [31:0] pcie_addr;
     wire [31:0] pcie_wdata;
     wire        pcie_we;
-    // wire [31:0] pcie_rdata; // Not used yet for readback
+    
+    // DMA Signals
+    wire [31:0] dma_m_addr;
+    wire [31:0] dma_m_wdata;
+    wire        dma_m_we;
+    wire        dma_irq;
     
     // RAM Signals (Arbitrated)
     reg [31:0] ram_addr;
@@ -57,16 +62,36 @@ module hansen_soc (
         .bus_rdata(ram_rdata) // Shared read
     );
 
+    // Instantiate DMA Controller
+    // Mapped at high address or via separate bus? 
+    // For simplicity: We snoop writes to 0x4000_0000 range for DMA Config
+    wire dma_cfg_sel = (pcie_addr[31:28] == 4'h4); // Base 0x4...
+    
+    dma_controller dma (
+        .clk(clk),
+        .reset(reset),
+        .cfg_addr(pcie_addr),
+        .cfg_wdata(pcie_wdata),
+        .cfg_we(pcie_we && dma_cfg_sel),
+        .irq_done(dma_irq),
+        .m_addr(dma_m_addr),
+        .m_wdata(dma_m_wdata),
+        .m_we(dma_m_we)
+    );
+
     // Instantiate RAM (Behavioral)
     // 64KB = 16384 Words
     reg [31:0] mem [0:16383];
     
     assign ram_rdata = mem[ram_addr[15:2]]; // Word aligned read (addr / 4)
 
-    // Bus Arbiter (Priority: PCIe > Core)
-    // If PCIe is writing, it takes control. Otherwise Core has control.
+    // Bus Arbiter (Priority: DMA > PCIe > Core)
     always @(*) begin
-        if (pcie_we) begin
+        if (dma_m_we) begin
+            ram_addr = dma_m_addr;
+            ram_wdata = dma_m_wdata;
+            ram_we = dma_m_we;
+        end else if (pcie_we && !dma_cfg_sel) begin // Don't write to RAM if targetting DMA regs
             ram_addr = pcie_addr;
             ram_wdata = pcie_wdata;
             ram_we = pcie_we;
