@@ -52,12 +52,14 @@ The Hansen Core uses standard RISC-V 32-bit fixed-length instruction formats.
 ### 3.3 Control Flow (Branch/Jump)
 - **Branch Opcode**: `1100011`
 - **JAL Opcode**: `1101111`
+- **JALR Opcode**: `1100111` (Essential for `ret`)
 
 | Mnemonic | Format | Opcode | Funct3 | Description |
 |---|---|---|---|---|
 | **BEQ** | B | `1100011` | `000` | if (rs1 == rs2) PC += imm |
 | **BNE** | B | `1100011` | `001` | if (rs1 != rs2) PC += imm |
 | **JAL** | J | `1101111` | N/A | rd = PC+4; PC += imm |
+| **JALR** | I | `1100111` | `000` | rd = PC+4; PC = (rs1 + imm) & ~1 |
 
 ### 3.4 System / Custom
 - **Custom Opcode**: `1111011` (Custom-0 Reserved space in RISC-V)
@@ -72,3 +74,15 @@ The Hansen Core uses standard RISC-V 32-bit fixed-length instruction formats.
 - **Address Space**: 0x00000000 - 0xFFFFFFFF
 - **Implemented RAM**: Base 0x00000000, Size 64KB.
 - **Unaligned Access**: Not supported. All access must be 4-byte aligned.
+
+## 5. Control Signal Truth Table
+To ensure FPGA synthesis safety, the Control Unit follows this logic:
+
+| Instr | Opcode | RegWrite | MemRead | MemWrite | ALUOp | Branch |
+|---|---|---|---|---|---|---|
+| **R-Type** | 0110011 | 1 | 0 | 0 | FUNC | 0 |
+| **LW** | 0000011 | 1 | 1 | 0 | ADD | 0 |
+| **SW** | 0100011 | 0 | 0 | 1 | ADD | 0 |
+| **BEQ** | 1100011 | 0 | 0 | 0 | SUB | 1 |
+| **JAL** | 1101111 | 1 | 0 | 0 | X | 1 |
+| **JALR** | 1100111 | 1 | 0 | 0 | ADD | 1 |

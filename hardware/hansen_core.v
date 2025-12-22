@@ -33,13 +33,16 @@ module hansen_core (
     wire        flush;
     
     // PC Logic
-    // Branch taken signal from EX stage (Backwards path!)
+    // Branch/Jump signals from EX stage
     wire        ex_branch_taken;
     wire [31:0] ex_branch_target;
     
+    // Hazard Stall Signal
+    wire        hazard_stall;
+
     always @(posedge clk or posedge reset) begin
         if (reset) pc <= 0;
-        else if (!stall) begin
+        else if (!stall && !hazard_stall) begin // Stall freezes PC
             if (ex_branch_taken) pc <= ex_branch_target;
             else pc <= pc_next;
         end
@@ -55,6 +58,12 @@ module hansen_core (
         if (reset || flush) begin
             if_id_pc <= 0;
             if_id_instr <= 0; // NOP
+            
+        end else if (hazard_stall) begin
+             // STALL: Keep current values (Freeze pipeline)
+             if_id_pc <= if_id_pc;
+             if_id_instr <= if_id_instr;
+             
         end else if (!stall) begin
             if_id_pc <= pc;
             if_id_instr <= imem_rdata;
@@ -82,7 +91,21 @@ module hansen_core (
     wire is_store = (opcode == 7'b0100011);
     wire is_branch= (opcode == 7'b1100011);
     wire is_jal   = (opcode == 7'b1101111);
-    wire reg_write_en = (opcode == 7'b0110011 || opcode == 7'b0010011 || opcode == 7'b0000011 || opcode == 7'b1101111); // R-Type, I-Type, Load, JAL
+    wire is_jalr  = (opcode == 7'b1100111); // New JALR
+    wire reg_write_en = (opcode == 7'b0110011 || opcode == 7'b0010011 || opcode == 7'b0000011 || opcode == 7'b1101111 || opcode == 7'b1100111); 
+
+    // --- HAZARD DETECTION UNIT ---
+    // Detect RAW dependency: ID.rs1/rs2 == EX.rd OR MEM.rd
+    // If detected, Stall Fetch/Decode, Insert NOP into Execute.
+    // Note: We check ex_mem_rd (EX stage output) and mem_wb_rd (MEM stage output)
+    // Actually, simplified: check id_ex_rd (EX stage current) and ex_mem_rd (MEM stage current)
+    
+    wire ex_hazard_rs1 = (id_ex_reg_write && id_ex_rd != 0 && id_ex_rd == rs1_idx);
+    wire ex_hazard_rs2 = (id_ex_reg_write && id_ex_rd != 0 && id_ex_rd == rs2_idx);
+    wire mem_hazard_rs1 = (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == rs1_idx);
+    wire mem_hazard_rs2 = (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == rs2_idx);
+    
+    assign hazard_stall = ex_hazard_rs1 || ex_hazard_rs2 || mem_hazard_rs1 || mem_hazard_rs2;
 
     // ID/EX Pipeline Register
     reg [31:0] id_ex_pc;
@@ -96,7 +119,7 @@ module hansen_core (
     reg        id_ex_mem_write;
     
     always @(posedge clk or posedge reset) begin
-        if (reset || flush) begin
+        if (reset || flush || hazard_stall) begin // Insert Bubble on Hazard
             id_ex_pc <= 0;
             id_ex_rs1_val <= 0;
             id_ex_rs2_val <= 0;
@@ -147,16 +170,24 @@ module hansen_core (
             7'b0000011: alu_result = id_ex_rs1_val + id_ex_imm;     // LW Addr
             7'b0100011: alu_result = id_ex_rs1_val + id_ex_imm;     // SW Addr
             7'b1101111: alu_result = id_ex_pc + 4;                  // JAL (Store PC+4)
+            7'b1100111: alu_result = id_ex_pc + 4;                  // JALR (Store PC+4)
             default:    alu_result = 0;
         endcase
     end
     
     // Branch Resolution
-    wire ex_is_beq = (id_ex_opcode == 7'b1100011); // Simplified check
+    wire ex_is_beq = (id_ex_opcode == 7'b1100011); 
+    wire ex_is_jal = (id_ex_opcode == 7'b1101111);
+    wire ex_is_jalr = (id_ex_opcode == 7'b1100111);
+
     wire ex_cond_met = (id_ex_rs1_val == id_ex_rs2_val); 
     
-    assign ex_branch_taken = (ex_is_beq && ex_cond_met) || (id_ex_opcode == 7'b1101111); // BEQ Taken OR JAL
-    assign ex_branch_target = id_ex_pc + id_ex_imm;
+    assign ex_branch_taken = (ex_is_beq && ex_cond_met) || ex_is_jal || ex_is_jalr; 
+    
+    // Target Calculation
+    // JAL/Branch: PC + Imm
+    // JALR: RS1 + Imm
+    assign ex_branch_target = (ex_is_jalr) ? (id_ex_rs1_val + id_ex_imm) : (id_ex_pc + id_ex_imm);
     
     // EX/MEM Pipeline Register
     reg [31:0] ex_mem_alu_res;
