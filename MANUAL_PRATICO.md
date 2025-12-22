@@ -1,6 +1,8 @@
 # HANSEN ACCELERATOR: MANUAL PRÁTICO (v1.0)
 **Guia Definitivo de Desenvolvimento, Arquitetura e Implementação.**
 
+[🇺🇸 English](MANUAL_EN.md) | [🇧🇷 Português](MANUAL_PRATICO.md)
+
 ---
 
 ## Índice

@@ -2,6 +2,8 @@
 
 **High-Performance Computational Accelerator for Physics & Simulation Offloading.**
 
+[🇺🇸 English](README.md) | [🇧🇷 Português](README_PT.md)
+
 ---
 
 ## 1. Vision
