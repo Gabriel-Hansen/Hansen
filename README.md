@@ -14,8 +14,8 @@ The Hansen Accelerator is a specialized co-processor designed to relieve x86_64 
 
 ```mermaid
 graph TD
-    Host[x86_64 Host PC] <-->|PCIe| Driver[Hansen Driver (Linux)]
-    Driver <-->|DMA| Mem[Local Memory (64KB+)]
+    Host["x86_64 Host PC"] <-->|PCIe| Driver["Hansen Driver (Linux)"]
+    Driver <-->|DMA| Mem["Local Memory (64KB+)"]
     
     subgraph Accelerator [Hansen Accelerator]
         Mem

@@ -7,10 +7,10 @@ The Hansen Accelerator SoC consists of a single-cycle RISC-V core tightly couple
 ### Block Diagram
 ```mermaid
 graph LR
-    Host -- PCIe --> PCIe_IP[PCIe Transaction Layer]
+    Host -- PCIe --> PCIe_IP["PCIe Transaction Layer"]
     PCIe_IP -- AXI/Wishbone --> Arbiter
     Core[Hansen Core] -- Load/Store --> Arbiter
-    Arbiter --> SRAM[64KB Shared SRAM]
+    Arbiter --> SRAM["64KB Shared SRAM"]
 ```
 
 ## 2. Processor Core
