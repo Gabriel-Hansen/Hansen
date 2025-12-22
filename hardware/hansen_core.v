@@ -55,10 +55,12 @@ module hansen_core (
     reg [31:0] if_id_instr;
     
     always @(posedge clk or posedge reset) begin
-        if (reset || flush) begin
+        if (reset) begin
             if_id_pc <= 0;
             if_id_instr <= 0; // NOP
-            
+        end else if (flush) begin
+            if_id_pc <= 0;
+            if_id_instr <= 0; // NOP
         end else if (hazard_stall) begin
              // STALL: Keep current values (Freeze pipeline)
              if_id_pc <= if_id_pc;
@@ -117,9 +119,10 @@ module hansen_core (
     reg        id_ex_reg_write;
     reg        id_ex_mem_read;
     reg        id_ex_mem_write;
+    reg        id_ex_sub_flag; // Bit 30 for ADD/SUB distinction
     
     always @(posedge clk or posedge reset) begin
-        if (reset || flush || hazard_stall) begin // Insert Bubble on Hazard
+        if (reset) begin
             id_ex_pc <= 0;
             id_ex_rs1_val <= 0;
             id_ex_rs2_val <= 0;
@@ -129,6 +132,18 @@ module hansen_core (
             id_ex_reg_write <= 0;
             id_ex_mem_read <= 0;
             id_ex_mem_write <= 0;
+            id_ex_sub_flag <= 0;
+        end else if (flush || hazard_stall) begin // Insert Bubble on Hazard/Flush
+            id_ex_pc <= 0;
+            id_ex_rs1_val <= 0;
+            id_ex_rs2_val <= 0;
+            id_ex_imm <= 0;
+            id_ex_rd <= 0;
+            id_ex_opcode <= 0;
+            id_ex_reg_write <= 0;
+            id_ex_mem_read <= 0;
+            id_ex_mem_write <= 0;
+            id_ex_sub_flag <= 0;
         end else begin
             id_ex_pc <= if_id_pc;
             id_ex_rs1_val <= rs1_val;
@@ -138,6 +153,7 @@ module hansen_core (
             id_ex_reg_write <= reg_write_en;
             id_ex_mem_read <= is_load;
             id_ex_mem_write <= is_store;
+            id_ex_sub_flag <= id_instr[30]; // Pass bit 30
             
             // Choose Immediate based on type
             if (is_store) id_ex_imm <= imm_s;
@@ -150,8 +166,6 @@ module hansen_core (
     // --- Stage 3: EX (Execute) ---
     // ALU
     reg [31:0] alu_result;
-    // ALU
-    reg [31:0] alu_result;
     
     // Funct for R-Type
     wire [2:0] funct3 = id_ex_imm[14:12]; // Note: This mapping is tricky. In Pipeline, we lost raw instr. 
@@ -161,10 +175,8 @@ module hansen_core (
     always @(*) begin
         case(id_ex_opcode)
             7'b0110011: begin // R-Type
-                 // Need to decode SUB vs ADD. For now, assume ADD unless funct7? 
-                 // Limitation: Logic assumes passed control signals.
-                 // Let's implement ADD/SUB based on a mock "ALU_Control" signal we should have generated.
-                 alu_result = id_ex_rs1_val + id_ex_rs2_val; 
+                 if (id_ex_sub_flag) alu_result = id_ex_rs1_val - id_ex_rs2_val;
+                 else alu_result = id_ex_rs1_val + id_ex_rs2_val;
             end
             7'b0010011: alu_result = id_ex_rs1_val + id_ex_imm;     // ADDI
             7'b0000011: alu_result = id_ex_rs1_val + id_ex_imm;     // LW Addr
