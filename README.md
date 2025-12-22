@@ -37,7 +37,7 @@ graph TD
 ```
 
 ## 3. Project Status
-Current Phase: **Phase 4 (Demos/Prototype)**
+Current Phase: **Phase 12 (Formalization Complete)**
 
 | Phase | Description | Status |
 |---|---|---|
@@ -45,8 +45,20 @@ Current Phase: **Phase 4 (Demos/Prototype)**
 | **2** | Driver Mock | ✅ Completed |
 | **3** | FPGA RTL (Verilog) | ✅ Completed |
 | **4** | Demos & Docs | ✅ Completed |
-| **5** | FPGA PCB | ⏳ Pending |
-| **6** | Silicon (ASIC) | 🔮 Future |
+| **5** | Technical Documentation | ✅ Completed |
+| **6** | Real Kernel Driver | ✅ Completed |
+| **7** | Silicon Config | ✅ Completed |
+| **8** | Workload Analysis | ✅ Completed |
+| **9** | Tooling & Pipeline | ✅ Completed |
+| **10** | Localization | ✅ Completed |
+| **11** | API Stability | ✅ Completed |
+| **12** | HW/SW Contract | ✅ Completed |
+
+## 4. Documentation
+- **Manual**: [Practical Manual](MANUAL_EN.md)
+- **API**: [C API Reference](API_REFERENCE.md)
+- **Hardware**: [Interface Contract](HARDWARE_INTERFACE.md)
+- **Architecture**: [Deep Dive](ARCHITECTURE.md)
 
 ## 4. Workloads
 The accelerator is optimized for:
