@@ -1,0 +1,15 @@
+
+# Yosys Synthesis Script for Hansen SoC
+# Pre-check for FPGA logical validity before ASIC toolchain
+
+read_verilog hardware/hansen_core.v
+read_verilog hardware/pcie_mock.v
+read_verilog hardware/hansen_soc.v
+
+synth_xilinx -top hansen_soc -family xc7
+
+# Report Usage
+stat
+
+# Output netlist
+write_verilog asic/netlist_synth.v
