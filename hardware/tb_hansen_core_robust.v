@@ -23,7 +23,6 @@ module tb_hansen_core_robust;
 
     // Mock RAM (1KB)
     reg [31:0] instr_mem [0:255];
-    reg [31:0] instr_mem [0:255];
     reg [31:0] data_mem  [0:255]; 
     
     // Mock Data Memory
