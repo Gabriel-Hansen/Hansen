@@ -17,7 +17,10 @@ module hansen_core (
     input  [31:0] dmem_rdata,
     
     // Debug
-    output [31:0] reg_x1_debug
+    output [31:0] reg_x1_debug,
+    
+    // Exception Interface
+    output        trap
 );
 
     // --- Registers ---
@@ -108,6 +111,11 @@ module hansen_core (
     wire mem_hazard_rs2 = (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == rs2_idx);
     
     assign hazard_stall = ex_hazard_rs1 || ex_hazard_rs2 || mem_hazard_rs1 || mem_hazard_rs2;
+    
+    // Exception Detection (Trap)
+    // Check for invalid opcode in ID stage
+    wire valid_opcode = is_load || is_store || is_branch || is_jal || is_jalr || reg_write_en || (opcode == 7'b1111011); // Include HALT
+    assign trap = !valid_opcode;
 
     // ID/EX Pipeline Register
     reg [31:0] id_ex_pc;
@@ -120,6 +128,7 @@ module hansen_core (
     reg        id_ex_mem_read;
     reg        id_ex_mem_write;
     reg        id_ex_sub_flag; // Bit 30 for ADD/SUB distinction
+    reg        id_ex_slt_flag; // SLT detection
     
     always @(posedge clk or posedge reset) begin
         if (reset) begin
@@ -130,9 +139,9 @@ module hansen_core (
             id_ex_rd <= 0;
             id_ex_opcode <= 0;
             id_ex_reg_write <= 0;
-            id_ex_mem_read <= 0;
             id_ex_mem_write <= 0;
             id_ex_sub_flag <= 0;
+            id_ex_slt_flag <= 0;
         end else if (flush || hazard_stall) begin // Insert Bubble on Hazard/Flush
             id_ex_pc <= 0;
             id_ex_rs1_val <= 0;
@@ -144,6 +153,7 @@ module hansen_core (
             id_ex_mem_read <= 0;
             id_ex_mem_write <= 0;
             id_ex_sub_flag <= 0;
+            id_ex_slt_flag <= 0;
         end else begin
             id_ex_pc <= if_id_pc;
             id_ex_rs1_val <= rs1_val;
@@ -154,6 +164,7 @@ module hansen_core (
             id_ex_mem_read <= is_load;
             id_ex_mem_write <= is_store;
             id_ex_sub_flag <= id_instr[30]; // Pass bit 30
+            id_ex_slt_flag <= (id_instr[14:12] == 3'b010); // Check Funct3 for SLT
             
             // Choose Immediate based on type
             if (is_store) id_ex_imm <= imm_s;
@@ -176,6 +187,7 @@ module hansen_core (
         case(id_ex_opcode)
             7'b0110011: begin // R-Type
                  if (id_ex_sub_flag) alu_result = id_ex_rs1_val - id_ex_rs2_val;
+                 else if (id_ex_slt_flag) alu_result = ($signed(id_ex_rs1_val) < $signed(id_ex_rs2_val)) ? 1 : 0;
                  else alu_result = id_ex_rs1_val + id_ex_rs2_val;
             end
             7'b0010011: alu_result = id_ex_rs1_val + id_ex_imm;     // ADDI

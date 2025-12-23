@@ -37,7 +37,9 @@ The Hansen Core uses standard RISC-V 32-bit fixed-length instruction formats.
 |---|---|---|---|---|---|
 | **ADD** | R | `0110011` | `000` | `0000000` | rd = rs1 + rs2 |
 | **SUB** | R | `0110011` | `000` | `0100000` | rd = rs1 - rs2 |
+| **SLT** | R | `0110011` | `010` | `0000000` | rd = (rs1 < rs2) ? 1 : 0 |
 | **ADDI** | I | `0010011` | `000` | N/A | rd = rs1 + imm |
+| **NOP** | I | `0010011` | `000` | N/A | ADDI x0, x0, 0 |
 | **MUL** | R | `0110011` | `000` | `0000001` | rd = rs1 * rs2 (M-Ext subset) |
 
 ### 3.2 Memory Access (Load/Store)
@@ -67,6 +69,15 @@ The Hansen Core uses standard RISC-V 32-bit fixed-length instruction formats.
 | Mnemonic | Format | Opcode | Funct3 | Description |
 |---|---|---|---|---|
 | **HALT** | I | `1111011` | `000` | Stop execution. Trigger IRQ 1. |
+
+### 3.5 Exception Model
+The Core supports a simplified Exception mechanism (Trap).
+- **Illegal Instruction**: If opcode is undefined, trigger `TRAP`.
+- **Memory Access Fault**: If Address > 64KB, trigger `TRAP`.
+- **Trap Behavior**:
+    - Sets `DMA_STATUS[ERROR]` bit.
+    - Halts PC.
+    - Asserts Interrupt 1.
 
 ---
 
