@@ -41,6 +41,11 @@ bench:
 	@chmod +x run_benchmarks.sh
 	@./run_benchmarks.sh
 
+bench-metrics:
+	@echo "[BENCH] Quantified Metrics (Simulated)"
+	@cd simulator && cargo build --bin bench_metrics --quiet
+	@./simulator/target/debug/bench_metrics tests/vectors/alu.hex
+
 # --- Utilities ---
 clean:
 	@echo "Cleaning up..."
