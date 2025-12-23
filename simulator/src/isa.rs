@@ -58,7 +58,7 @@ impl Instruction {
         // let funct7 = (word >> 25) & 0x7F;
         
         // I-Type Imm
-        let imm_i = ((word as i32) >> 20); 
+        let imm_i = (word as i32) >> 20; 
         // S-Type Imm
         let imm_s = (((word as i32) >> 25) << 5) | ((word >> 7) & 0x1F) as i32;
         // B-Type Imm (complex)

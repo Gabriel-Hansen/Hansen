@@ -1,0 +1,44 @@
+name: Hansen CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  # 1. Rust Simulator & Benchmarks
+  simulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          
+      - name: Build Simulator
+        run: cd simulator && cargo build --verbose
+        
+      - name: Run Unit Tests
+        run: cd simulator && cargo test --verbose
+        
+      - name: Run Oracle Verification
+        run: |
+          cd simulator 
+          cargo build --bin oracle --quiet
+          ../simulator/target/debug/oracle ../tests/vectors/alu.hex
+
+  # 2. Verilog RTL Verification
+  rtl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+        
+      - name: Run Granular Test Suite
+        run: make hw-test

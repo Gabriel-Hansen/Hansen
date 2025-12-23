@@ -120,6 +120,9 @@ impl Core {
             Opcode::HALT => {
                 self.halted = true;
             }
+            Opcode::UNKNOWN => {
+                return Err(format!("Illegal Opcode at PC={}", self.pc));
+            }
         }
 
         self.pc = next_pc;

@@ -5,6 +5,10 @@
 # Default target
 all: sim hw-test
 
+# Aliases for "Standard" Workflow
+test: hw-test
+rtl-test: hw-test
+
 # --- Hardware Simulation (Verilog) ---
 # Compiles and runs the Robust Testbench
 hw-test:
