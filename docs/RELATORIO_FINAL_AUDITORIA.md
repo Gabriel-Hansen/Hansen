@@ -35,6 +35,12 @@ Este documento resume as ações tomadas em resposta à revisão global do códi
 | **Automação** | Instruções de texto | **Make & CI** | `Makefile` padronizado e GitHub Actions (`.github/workflows/main.yml`) implementado. |
 | **Visual** | Texto puro | **Profissional** | Diagramas Mermaid adicionados ao `ARCHITECTURE.md`. |
 
+## 🛠️ 5. FPGA Readiness (Hardware Hardening)
+| Item | Status Antigo | Status Atual (v1.0) | Ação Realizada |
+|---|---|---|---|
+| **Top Level** | Apenas Core RTL | **Pacote Completo** | Criado `fpga/hansen_top.v` (Wrapper com Clocks/LEDs) e constraints para **Arty A7** (`fpga/arty_a7.xdc`). |
+| **Reset** | Simples | **Flush Total** | Verificado que todos os registradores de pipeline (IF/ID, ID/EX...) possuem reset síncrono limpo. |
+
 ---
 
 ## ✅ Conclusão
