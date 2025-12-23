@@ -27,15 +27,11 @@ module tb_alu;
     initial begin
         $dumpfile("trace_alu.vcd"); $dumpvars(0, tb_alu);
         for(integer i=0; i<256; i=i+1) instr_mem[i]=32'h00000013;
-
-        // 1. ADD: ADDI x1, x0, 10 -> 00A00093
-        instr_mem[0] = 32'h00A00093;
-        // 2. SUB: ADDI x2, x0, 3  -> 00300113
-        instr_mem[1] = 32'h00300113;
-        // 3. SUB x3, x1, x2 -> x3=7 (Check manually or via waveform)
         
-        // Let's rely on x1 check for now.
+        // Load Vector from shared file
+        $readmemh("tests/vectors/alu.hex", instr_mem);
         
+        // Wait for execution
         clk=0; reset=1; #10; reset=0;
         #100;
         
