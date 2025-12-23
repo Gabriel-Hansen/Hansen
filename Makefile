@@ -10,8 +10,22 @@ all: sim hw-test
 hw-test:
 	@echo "[HW] Compiling Verilog Testbench..."
 	@iverilog -g2012 -o robust_sim hardware/tb_hansen_core_robust.v hardware/hansen_core.v hardware/control_unit.v
-	@echo "[HW] Running Simulation..."
+	@echo "[HW] Running Robust Simulation..."
 	@vvp robust_sim
+	@echo "[HW] Running Granular Verification Suite..."
+	@make verify-alu verify-control verify-mem
+
+verify-alu:
+	@iverilog -g2012 -o alu_sim hardware/verification/tb_alu.v hardware/hansen_core.v hardware/control_unit.v
+	@vvp alu_sim
+
+verify-control:
+	@iverilog -g2012 -o control_sim hardware/verification/tb_control.v hardware/hansen_core.v hardware/control_unit.v
+	@vvp control_sim
+
+verify-mem:
+	@iverilog -g2012 -o mem_sim hardware/verification/tb_memory.v hardware/hansen_core.v hardware/control_unit.v
+	@vvp mem_sim
 
 # --- Software Simulator (Rust) ---
 # Runs the Rust-based functional simulator
