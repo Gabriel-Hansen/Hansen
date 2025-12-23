@@ -91,13 +91,33 @@ module hansen_core (
     wire [31:0] rs2_val = (rs2_idx == 0) ? 0 : regs[rs2_idx];
     
     // Control Signals
-    // Simple decoding
-    wire is_load  = (opcode == 7'b0000011);
-    wire is_store = (opcode == 7'b0100011);
-    wire is_branch= (opcode == 7'b1100011);
-    wire is_jal   = (opcode == 7'b1101111);
-    wire is_jalr  = (opcode == 7'b1100111); // New JALR
-    wire reg_write_en = (opcode == 7'b0110011 || opcode == 7'b0010011 || opcode == 7'b0000011 || opcode == 7'b1101111 || opcode == 7'b1100111); 
+    wire reg_write_en;
+    wire is_load;
+    wire is_store;
+    wire is_branch;
+    wire is_jal;
+    wire is_jalr;
+    wire sub_flag; // From CU
+    wire slt_flag; // From CU
+    wire trap_cu;  // From CU
+
+    control_unit cu (
+        .opcode(opcode),
+        .funct3(id_instr[14:12]),
+        .funct7_5(id_instr[30]),
+        .reg_write(reg_write_en),
+        .mem_read(is_load),
+        .mem_write(is_store),
+        .branch(is_branch),
+        .is_jal(is_jal),
+        .is_jalr(is_jalr),
+        .alu_sub_flag(sub_flag),
+        .alu_slt_flag(slt_flag),
+        .trap(trap_cu)
+    );
+    
+    // Trap assignment (Combine CU trap with other checks if needed)
+    assign trap = trap_cu; 
 
     // --- HAZARD DETECTION UNIT ---
     // Detect RAW dependency: ID.rs1/rs2 == EX.rd OR MEM.rd
@@ -112,10 +132,7 @@ module hansen_core (
     
     assign hazard_stall = ex_hazard_rs1 || ex_hazard_rs2 || mem_hazard_rs1 || mem_hazard_rs2;
     
-    // Exception Detection (Trap)
-    // Check for invalid opcode in ID stage
-    wire valid_opcode = is_load || is_store || is_branch || is_jal || is_jalr || reg_write_en || (opcode == 7'b1111011); // Include HALT
-    assign trap = !valid_opcode;
+    // Exception Detection handled by CU
 
     // ID/EX Pipeline Register
     reg [31:0] id_ex_pc;
@@ -163,8 +180,8 @@ module hansen_core (
             id_ex_reg_write <= reg_write_en;
             id_ex_mem_read <= is_load;
             id_ex_mem_write <= is_store;
-            id_ex_sub_flag <= id_instr[30]; // Pass bit 30
-            id_ex_slt_flag <= (id_instr[14:12] == 3'b010); // Check Funct3 for SLT
+            id_ex_sub_flag <= sub_flag;
+            id_ex_slt_flag <= slt_flag;
             
             // Choose Immediate based on type
             if (is_store) id_ex_imm <= imm_s;

@@ -9,7 +9,7 @@ all: sim hw-test
 # Compiles and runs the Robust Testbench
 hw-test:
 	@echo "[HW] Compiling Verilog Testbench..."
-	@iverilog -g2012 -o robust_sim hardware/tb_hansen_core_robust.v hardware/hansen_core.v
+	@iverilog -g2012 -o robust_sim hardware/tb_hansen_core_robust.v hardware/hansen_core.v hardware/control_unit.v
 	@echo "[HW] Running Simulation..."
 	@vvp robust_sim
 
