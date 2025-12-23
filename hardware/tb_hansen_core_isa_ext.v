@@ -29,6 +29,10 @@ module tb_hansen_core_isa_ext;
     always #5 clk = ~clk;
     always @(*) imem_rdata = instr_mem[imem_addr[9:2]];
 
+    reg trap_detected;
+    initial trap_detected = 0;
+    always @(posedge trap) trap_detected = 1;
+
     integer errors = 0;
     
     initial begin
@@ -68,7 +72,7 @@ module tb_hansen_core_isa_ext;
         // Let's rely on waveform or trap check.
         
         // Check Trap
-        if (trap === 1'b1) $display("[PASS] TRAP asserted on illegal opcode.");
+        if (trap_detected === 1'b1) $display("[PASS] TRAP asserted on illegal opcode.");
         else begin
             $display("[FAIL] TRAP NOT asserted on 0xFFFFFFFF.");
             errors = errors + 1;
