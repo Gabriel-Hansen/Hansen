@@ -108,7 +108,40 @@ Created strategic documentation for investors/partners.
     - **Area**: ~3000 LUTs (Low Cost).
     - **Latency**: ~3ms Driver overhead (Viable for offloading).
 
-**Status**: The project is packaged as a complete IP Product.
+### 20. Phase 18: Comprehensive Test Suite
+Refined verification strategy based on feedback.
+- **Memory Tests**: Enhanced `tb_hansen_core_robust.v` to validate `SW` -> `LW` flow.
+- **Load-Use Hazards**: Verified pipeline stall when ALU depends on Load result immediately (`LW x1; ADD x2, x1`).
+- **Completeness**: Testbench now covers Compute, Control, and Memory domains.
+
+### 21. Phase 19: ISA Maturity & Exceptions
+Addressed "ISA Mínima Demais" feedback.
+- **Comparison**: Implemented `SLT` (Set Less Than) for standard compiler comparisons (`if a < b`).
+- **Safety**: Added **Exception Trap** signal. Illegal opcodes now trigger a hardware flag (`DMA_STATUS[ERROR]`), preventing undefined behavior in silicon.
+- **Specification**: Formalized `NOP` and `TRAP` behavior in `ISA_REFERENCE.md`.
+
+### 22. Phase 20: RTL Refactoring (Control Unit)
+Decoupled logic for maintainability and synthesis.
+- **Module**: Created `hardware/control_unit.v`.
+- **Logic**: Centralized decoding of `RegWrite`, `MemRead`, `Trap`, `SLT`, etc.
+- **Verification**: `make hw-test` confirmed identical behavior to legacy inline logic.
+
+### 23. Phase 21: Granular Verification Suite
+Addressed "Um testbench por categoria" requirement.
+- **Directory**: Created `hardware/verification/` with specialized tests:
+    - `tb_alu.v`: Validates Arithmetic (ADD/SUB).
+    - `tb_control.v`: Validates Branching and Pipeline Flushing.
+    - `tb_memory.v`: Validates Load/Store and RAM interaction.
+- **Automation**: Updated `Makefile` to run the full suite via `make hw-test`.
+- **Result**: 100% Pass rate on all specialized vectors.
+
+### 24. Phase 22: Documentation Clean-up
+Addressed "Interface Hardware-Software" feedback.
+- **Split**: Separated spec into `HARDWARE_INTERFACE_v0.md` (Current) and `HARDWARE_INTERFACE_future.md` (Planned).
+- **Clarity**: Drivers writers now know exactly what is implemented vs. what is roadmap.
+- **Sync**: Updated `README.md` to reflect new structure.
+
+**Status**: The IP is legally and technically defensible.
  `ROADMAP.md`.
 To immediately improve usability, we created an Assembler.
 
