@@ -31,7 +31,14 @@ This document formally defines the Register Map, Commands, and State Machine beh
 
 #### DMA_STATUS Bitfields
 - **Bit 0**: `BUSY` - 1 if DMA or Core is active, 0 if Idle.
+- **Bit 1**: `INT_EN` - Enable Interrupt on completion.
+
+#### DMA_STATUS Bitfields
+- **Bit 0**: `BUSY` - 1 if DMA or Core is active, 0 if Idle.
 - **Bit 1**: `ERROR` - 1 if last command failed (e.g. Bus Error).
+
+### 2.1 Control Path Reference
+For detailed **Control Signal Truth Tables** (RegWrite, MemRead, ALUOp) and Instruction Encoding, refer to the [ISA Formal Specification](ISA_REFERENCE.md). This separation ensures modular documentation for Core vs SoC.
 
 ---
 
@@ -65,7 +72,7 @@ Currently, the hardware implements a **Depth-1 Command Queue** (Synchronous).
 5.  **HW**: Clears `STATUS=BUSY`, Asserts `IRQ`.
 6.  **HOST**: Sees `IRQ` or polls `STATUS`.
 
-*Future revisions (v2.0) will introduce a Ring Buffer (Circular Queue) at `0x5000_0000`.*
+
 
 ---
 

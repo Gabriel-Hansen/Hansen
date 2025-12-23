@@ -56,8 +56,9 @@ Current Phase: **Phase 12 (Formalization Complete)**
 
 ## 4. Documentation
 - **Manual**: [Practical Manual](MANUAL_EN.md)
-- **API**: [C API Reference](API_REFERENCE.md)
-- **Hardware**: [Interface Contract](HARDWARE_INTERFACE.md)
+- **Formal ISA**: [ISA_REFERENCE.md](ISA_REFERENCE.md) (RISC-V Subset)
+- **SoC Interface (v0)**: [HARDWARE_INTERFACE_v0.md](HARDWARE_INTERFACE_v0.md) (Current Implementation)
+- **SoC Interface (Future)**: [HARDWARE_INTERFACE_future.md](HARDWARE_INTERFACE_future.md) (Planned Features)
 - **Architecture**: [Deep Dive](ARCHITECTURE.md)
 
 ## 4. Workloads
