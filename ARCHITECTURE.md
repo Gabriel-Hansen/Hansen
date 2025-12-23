@@ -3,12 +3,26 @@
 ## 1. Core Microarchitecture
 The Hansen Core is a **5-Stage In-Order Pipelined RISC-V** processor.
 
-### Pipeline Stages
-1.  **IF (Instruction Fetch)**: Fetches instruction from `imem` at `PC`.
-2.  **ID (Instruction Decode)**: Decodes opcode, reads Register File (`regs`), handles Hazards.
-3.  **EX (Execute)**: Performs ALU operations, resolves Branches (`BEQ`, `JAL`).
-4.  **MEM (Memory)**: Accesses Data Memory (`dmem`) for Load/Store.
-5.  **WB (Writeback)**: Writes result back to Register File.
+### 2.1 Pipeline Stages (Visual)
+```mermaid
+graph LR
+    IF[Fetch] -->|Instr| ID[Decode]
+    ID -->|Control/Op| EX[Execute]
+    EX -->|Addr/Data| MEM[Memory]
+    MEM -->|WBack| WB[Writeback]
+    
+    subgraph Control Unit
+    ID -.->|Signals| Hazardous{Hazard?}
+    Hazardous -- Stall --> IF
+    end
+```
+
+### 2.2 Stage Details
+- **IF (Fetch)**: Fetches instruction from `imem` at `PC`. PC + 4 logic. IMEM Access.
+- **ID (Instruction Decode)**: Decodes opcode, reads Register File (`regs`), handles Hazards.
+- **EX (Execute)**: Performs ALU operations, resolves Branches (`BEQ`, `JAL`).
+- **MEM (Memory)**: Accesses Data Memory (`dmem`) for Load/Store.
+- **WB (Writeback)**: Writes result back to Register File.
 
 ---
 
@@ -20,14 +34,6 @@ To ensure correctness without the complexity of full forwarding grids, we implem
 Occurs when an instruction depends on the result of a previous instruction that hasn't reached Writeback yet.
 
 **Detection Logic**:
-The **Hazard Detection Unit** (in ID stage) checks if `rs1` or `rs2` of the current instruction matches the `rd` (destination) of instructions currently in:
-*   **EX Stage** (`id_ex_rd`)
-*   **MEM Stage** (`ex_mem_rd`)
-
-**Resolution**:
-*   If a match is found (and RegWrite is asserted), the pipeline **STALLS**.
-*   **PC** freezes.
-*   **IF/ID** Register freezes.
 *   **ID/EX** Register receives a **Bubble (NOP)**.
 *   The stall persists until the dependency clears (writes to Register File).
 

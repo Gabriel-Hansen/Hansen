@@ -60,6 +60,7 @@ Current Phase: **Phase 12 (Formalization Complete)**
 - **SoC Interface (v0)**: [HARDWARE_INTERFACE_v0.md](HARDWARE_INTERFACE_v0.md) (Current Implementation)
 - **SoC Interface (Future)**: [HARDWARE_INTERFACE_future.md](HARDWARE_INTERFACE_future.md) (Planned Features)
 - **Architecture**: [Deep Dive](ARCHITECTURE.md)
+- **Glossary**: [Technical Terms](GLOSSARY.md)
 
 ## 4. Workloads
 The accelerator is optimized for:

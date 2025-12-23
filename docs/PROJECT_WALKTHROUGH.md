@@ -141,7 +141,34 @@ Addressed "Interface Hardware-Software" feedback.
 - **Clarity**: Drivers writers now know exactly what is implemented vs. what is roadmap.
 - **Sync**: Updated `README.md` to reflect new structure.
 
-**Status**: The IP is legally and technically defensible.
+### 25. Phase 23: Oracle Co-Simulation
+Satisfied "Simulador como Oráculo" requirement.
+- **Vectors**: Standardized test cases into `.hex` files (e.g. `tests/vectors/alu.hex`).
+- **RTL**: Updated Verilog TB to load vectors via `$readmemh`.
+- **Rust**: Created `simulator/src/bin/oracle.rs` to execute the exact same hex files.
+- **Result**: Validated that `Simulator(x1) == RTL(x1)` automatically.
+
+### 26. Phase 24: Quantitative Benchmarks
+Response to "Investidor adora métricas".
+- **Tool**: Created `simulator/src/bin/bench_metrics.rs`.
+- **Output**: JSON format with `cycles`, `instructions`, and `IPC` (Instructions Per Cycle).
+- **Reproducibility**: Added `make bench-metrics` for one-click verification of performance numbers.
+
+### 27. Phase 25: CI/CD & Repository Polish
+Addressed "Maturidade de Repositório".
+- **Makefile**: added standard targets `make test`, `make rtl-test`.
+- **CI**: Created `.github/workflows/main.yml` to automatically run:
+    1.  Rust Unit Tests.
+    2.  Oracle Verification (Hex matching).
+    3.  Verilog `hw-test` (via apt-install iverilog).
+
+### 28. Phase 26: Professional Documentation
+Addressed "Patente / Pitch / Universidade".
+- **Visuals**: Added Mermaid diagrams to `ARCHITECTURE.md` showing Pipeline flow and Hazard Logic.
+- **Terms**: Created `GLOSSARY.md` covering all technical acronyms (IPC, DMA, RTL, etc.).
+- **Reference**: Ensured Truth Tables are linked in the main manual.
+
+**Status**: The project is packaged as a complete IP Product.
  `ROADMAP.md`.
 To immediately improve usability, we created an Assembler.
 
