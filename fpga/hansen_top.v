@@ -20,8 +20,16 @@ module hansen_top (
     wire sys_clk = clk_100mhz; // Direct for now (100MHz is fast for this core, might need divider)
     
     // 2. Reset Conditioning
-    wire reset;
-    assign reset = ~reset_n_pin; // Invert to Active High for Core
+    // 2. Reset Conditioning (Synchronizer to SysClk)
+    reg rst_sync_1, rst_sync_2;
+    wire reset_in = ~reset_n_pin; // Active High internal
+    
+    always @(posedge sys_clk) begin
+        rst_sync_1 <= reset_in;
+        rst_sync_2 <= rst_sync_1;
+    end
+    
+    wire reset = rst_sync_2; // Synchronized Reset
 
     // 3. Core Instantiation
     wire [31:0] debug_x1;
@@ -50,21 +58,36 @@ module hansen_top (
     );
     
     // 4. Memory Block (BRAM - 2KB for FPGA Demo)
+    // NOTE: IMEM and DMEM share the same BRAM for demo purposes (Unified Memory).
+    // This simplifies the FPGA Top Level but is not a true Harvard architecture.
+
     // In real FPGA, use Xilinx IP Block Memory Generator
     // Here we interpret a simple behavioral array as Block RAM
     reg [31:0] bram [0:511];
     
-    always @(posedge sys_clk) begin
-        if (dmem_we) bram[dmem_addr[10:2]] <= dmem_wdata;
+    // BRAM Initialization for Bitstream
+    initial begin
+        $readmemh("fpga/firmware.hex", bram);
     end
+
     
-    // Dual Port / Single Port Sim
-    assign imem_rdata = bram[imem_addr[10:2]];
-    assign dmem_rdata = bram[dmem_addr[10:2]];
+    // Address Masking (Prevent Out-Of-Bounds)
+    // Mask to 9 bits (512 words)
+    wire [8:0] imem_idx = imem_addr[10:2];
+    wire [8:0] dmem_idx = dmem_addr[10:2];
+
+    assign imem_rdata = bram[imem_idx];
+    assign dmem_rdata = bram[dmem_idx];
+    
+    always @(posedge sys_clk) begin
+        if (dmem_we) bram[dmem_idx] <= dmem_wdata;
+    end
 
     // 5. Output Logic
-    // Show lower 4 bits of x1 on LEDs
-    assign leds = debug_x1[3:0];
-    assign uart_tx = 1'b1; // Idle
+    // If TRAP occurs, turn ALL LEDs ON (Panic Mode)
+    assign leds = trap ? 4'b1111 : debug_x1[3:0];
+    
+    // Stub UART (Documented Limitation)
+    assign uart_tx = 1'b1; // Idle line
 
 endmodule

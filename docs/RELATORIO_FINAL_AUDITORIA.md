@@ -39,7 +39,10 @@ Este documento resume as ações tomadas em resposta à revisão global do códi
 | Item | Status Antigo | Status Atual (v1.0) | Ação Realizada |
 |---|---|---|---|
 | **Top Level** | Apenas Core RTL | **Pacote Completo** | Criado `fpga/hansen_top.v` (Wrapper com Clocks/LEDs) e constraints para **Arty A7** (`fpga/arty_a7.xdc`). |
-| **Reset** | Simples | **Flush Total** | Verificado que todos os registradores de pipeline (IF/ID, ID/EX...) possuem reset síncrono limpo. |
+| **Reset** | Assíncrono | **Sync (2-FF)** | Adicionado sincronizador de reset no top-level. |
+| **Memória** | Lixo no startup | **Firmware Preload** | `initial $readmemh` adicionado para carregar bitstream. |
+| **Segurança** | Endereços ilegais | **Masked** | Mascaramento de endereços para evitar acesso out-of-bounds na BRAM. |
+| **Trap** | Invisível | **Visual (LEDs)** | `TRAP` acende todos os LEDs (Panic Mode). |
 
 ---
 
