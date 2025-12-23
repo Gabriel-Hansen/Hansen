@@ -1,52 +1,59 @@
-# HANSEN ARCHITECTURE REFERENCE
+# Hansen Architecture Deep Dive
 
-## 1. System Overview
-
-The Hansen Accelerator SoC consists of a single-cycle RISC-V core tightly coupled with a local scratchpad memory, accessible by the host via a PCIe BAR0 interface.
-
-### Block Diagram
-```mermaid
-graph LR
-    Host -- PCIe --> PCIe_IP["PCIe Transaction Layer"]
-    PCIe_IP -- AXI/Wishbone --> Arbiter
-    Core[Hansen Core] -- Load/Store --> Arbiter
-    Arbiter --> SRAM["64KB Shared SRAM"]
-```
-
-## 2. Processor Core
-
-### ISA Subset
-The core implements the **RV32I** base integer instruction set, excluding:
-- `FENCE`, `ECALL`, `EBREAK` (System instructions not needed for pure kernels yet).
-- `CSR` instructions (Status registers are memory mapped for simplicity).
+## 1. Core Microarchitecture
+The Hansen Core is a **5-Stage In-Order Pipelined RISC-V** processor.
 
 ### Pipeline Stages
-Currently implemented as a **Single Cycle** machine for simplicity and determinism.
-1. **Fetch**: Read instruction from `PC` address in Memory.
-2. **Decode**: Extract fields (opcode, rs1, rs2, rd, imm).
-3. **Execute**: ALU operations (Add, Sub, Logic) or Address Calculation.
-4. **Memory**: Read/Write data if Load/Store.
-5. **Writeback**: Update `rd` register.
+1.  **IF (Instruction Fetch)**: Fetches instruction from `imem` at `PC`.
+2.  **ID (Instruction Decode)**: Decodes opcode, reads Register File (`regs`), handles Hazards.
+3.  **EX (Execute)**: Performs ALU operations, resolves Branches (`BEQ`, `JAL`).
+4.  **MEM (Memory)**: Accesses Data Memory (`dmem`) for Load/Store.
+5.  **WB (Writeback)**: Writes result back to Register File.
 
-## 3. Memory Map
+---
 
-| Address Range | Size | Description |
-|---|---|---|
-| `0x0000_0000` - `0x0000_FFFF` | 64 KB | Local SRAM (Instructions + Data) |
-| `0x8000_0000` - `0x8000_0004` | 4 B | Control Register (Start/Stop) |
-| `0x8000_0008` - `0x8000_000C` | 4 B | Status Register (Busy/Done) |
+## 2. Hazard Handling Strategy
 
-## 4. Host Interface (PCIe)
+To ensure correctness without the complexity of full forwarding grids, we implement a **Hardware Interlock (Stall)** strategy.
 
-The host interacts with the accelerator through Memory Mapped I/O.
-1. **Load Kernel**: Host writes binary machine code to `0x0000_0000`.
-2. **Load Data**: Host writes initial data structures to `0x0000_1000` (convention).
-3. **Start**: Host writes `1` to `0x8000_0000`.
-4. **Poll**: Host reads `0x8000_0008` until `Done`.
-5. **Read Result**: Host reads data from `0x0000_1000`.
+### A. Data Hazards (RAW - Read After Write)
+Occurs when an instruction depends on the result of a previous instruction that hasn't reached Writeback yet.
 
-## 5. Software Stack
+**Detection Logic**:
+The **Hazard Detection Unit** (in ID stage) checks if `rs1` or `rs2` of the current instruction matches the `rd` (destination) of instructions currently in:
+*   **EX Stage** (`id_ex_rd`)
+*   **MEM Stage** (`ex_mem_rd`)
 
-- **Kernel**: Code running on the accelerator (bare metal, no OS).
-- **Driver**: User-space library handling the MMIO transactions.
-- **Application**: Game or Simulation executable linking `libhansen`.
+**Resolution**:
+*   If a match is found (and RegWrite is asserted), the pipeline **STALLS**.
+*   **PC** freezes.
+*   **IF/ID** Register freezes.
+*   **ID/EX** Register receives a **Bubble (NOP)**.
+*   The stall persists until the dependency clears (writes to Register File).
+
+### B. Control Hazards (Branching)
+Occurs when a branch/jump decision changes the PC, invalidating instructions already fetched.
+
+**Resolution**:
+*   **Flush**: When `BEQ` (Taken) or `JAL/JALR` is detected in EX stage, the instructions in IF/ID and ID/EX are **Flushed** (zeroed out).
+*   **Penalty**: 2 cycles (standard for this topology).
+
+### C. Structural Hazards
+*   **Memory**: Separate Instruction (IMEM) and Data (DMEM) buses prevent structural hazards on memory access (Harvard Architecture behavior).
+*   **Register File**: Supports simultaneous Read (Decode) and Write (Writeback). 
+     *   *Note*: If Read and Write occur to the same register in the same cycle, the Register File logic must handle logical forwarding (Internal Forwarding) or Write-First. Currently relies on checking hazards to simply Stall, avoiding this edge case entirely.
+
+---
+
+## 4. Future Optimizations (v2.0 Roadmap)
+While the currrent **Stall** strategy ensures correctness, it incurs performance penalties (KPI: CPI ~1.2).
+
+### Planned Improvements:
+1.  **Data Forwarding Unit**: Bypass grid to feed ALU results directly to next instruction, eliminating most RAW stalls.
+2.  **Branch Prediction**: Static "Predict-Not-Taken" is currently used. Dynamic prediction (2-bit saturating counter) will reduce flush penalty.
+3.  **Instruction Cache (I-Cache)**: Replace current scratchpad model with a direct-mapped cache for larger programs.
+
+---
+
+## 3. Bus & Memory map
+(See `HARDWARE_INTERFACE.md`)

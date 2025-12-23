@@ -22,7 +22,7 @@ To be considered "Commercial Ready", we need to bridge these gaps:
 - **Funding Goal**: $500k Pre-Seed (Angel/Accelerator).
 
 ### Q3-Q4: Multi-Core Scaling
-- **Architecture**: Expand to 4-Core Cluster with shared memory.
+- **Architecture**: Expand to 4-Core Cluster with shared memory. Impl **Forwarding Unit** to reach CPI ~1.0.
 - **Tooling**: LLVM Backend integration for compiling C++ directly to Hansen ISA.
 - **Funding Goal**: $2M Seed (Deep Tech VCs).
 
