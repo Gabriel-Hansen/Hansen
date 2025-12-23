@@ -23,7 +23,14 @@ module tb_hansen_core_robust;
 
     // Mock RAM (1KB)
     reg [31:0] instr_mem [0:255];
-    reg [31:0] data_mem  [0:255]; // Not strictly hooked to core's dmem interface in this mock TB, but we mock reads
+    reg [31:0] instr_mem [0:255];
+    reg [31:0] data_mem  [0:255]; 
+    
+    // Mock Data Memory
+    always @(posedge clk) begin
+        if (dmem_we) data_mem[dmem_addr[9:2]] <= dmem_wdata;
+    end
+    always @(*) dmem_rdata = data_mem[dmem_addr[9:2]];
 
     always #5 clk = ~clk;
 
@@ -68,6 +75,22 @@ module tb_hansen_core_robust;
 
         // 24: ADDI x5, x0, 42  -> 02A00293 (Target)
         instr_mem[6] = 32'h02A00293;
+        
+        // 4. Memory (SW / LW)
+        // 28: ADDI x6, x0, 100 -> 06400313 (Data=100)
+        // 32: ADDI x7, x0, 64  -> 04000393 (Addr=64)
+        // 36: SW   x6, 0(x7)   -> 0063A023 (Mem[64] = 100)
+        instr_mem[7] = 32'h06400313;
+        instr_mem[8] = 32'h04000393;
+        instr_mem[9] = 32'h0063A023;
+        
+        // 40: LW   x8, 0(x7)   -> 0003A403 (x8 = Mem[64] = 100)
+        instr_mem[10] = 32'h0003A403;
+        
+        // 5. Load-Use Hazard 
+        // 44: ADDI x9, x8, 1   -> 00140493 (x9 = x8 + 1 = 101). Depends on LW result immediately.
+        instr_mem[11] = 32'h00140493;
+
 
 
         // -- SETUP --
