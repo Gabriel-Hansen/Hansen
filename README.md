@@ -81,7 +81,17 @@ Comparison: **100 Particle Physics Updates**
 
 > **Key Takeaway**: Hansen matches the fastest Desktop CPUs in the world for this specific workload, while running at **50MHz (100x slower clock)** and consuming **1/1000th of the power**.
 
-## 6. How to Run
+### ⚡ Quick Start (Makefile)
+
+The project now includes a strict `Makefile` for one-step verification.
+
+| Command | Description |
+|---|---|
+| `make hw-test` | Runs the **Verilog Testbench** (FPGA Logic Verification). |
+| `make bench` | Runs Performance **Benchmarks** (Driver vs Native). |
+| `make sim` | Builds the **Rust Simulator**. |
+
+### 🏗️ Manual Build (Legacy)
 
 ### Requirements
 - **Rust** (cargo)
